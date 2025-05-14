@@ -8,11 +8,11 @@ fi
 
 # Assign arguments to environment variables
 export MODEL_NAME="$1"
-export STAGE="$2"
+export VERSION="$2"
 
 # Optionally print them for debugging
 echo "MODEL_NAME: $MODEL_NAME"
 echo "VERSION: $VERSION"
 
 # Run your Python script
-python "$(dirname "$0")/download_model.py"
+python3 "$(dirname "$0")/download_model.py"
