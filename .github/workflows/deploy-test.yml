@@ -19,12 +19,23 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.11  # Specify the version you need
-
+        
+    - name: Install pyenv and required Python version
+      run: |
+        curl https://pyenv.run | bash
+        echo "$HOME/.pyenv/bin:$PATH" >> $GITHUB_PATH
+        export PATH="$HOME/.pyenv/bin:$PATH"
+        eval "$(pyenv init --path)"
+        eval "$(pyenv init -)"
+        eval "$(pyenv virtualenv-init -)"
+        pyenv install 3.11.12  # Install Python version
+        pyenv global 3.11.12   # Set it as the global Python version
+        
     - name: Install dependencies from the current branch
       run: |
         # Install required packages including MLflow and others from the requirements.txt in the PR branch
         pip install -r requirements.txt  # This installs the dependencies from the PR branch
-
+        
     - name: Serve the MLflow model
       run: |
         # Set the model directory path
@@ -32,8 +43,12 @@ jobs:
         
         # Serve the model using MLflow's `models serve` command
         mlflow models serve -m $MODEL_PATH -p 5000 &
-
+    
+        # Wait for the service to start (you can increase the time as needed)
+        sleep 10
+    
     - name: Test the MLflow model service
       run: |
         # Test the container by making a request to the model service
         curl --fail http://localhost:5000/health || exit 1
+
