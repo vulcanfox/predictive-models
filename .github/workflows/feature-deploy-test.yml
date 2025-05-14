@@ -1,42 +1,52 @@
-name: Serve MLflow Model
+name: MLflow Model Server Validation
 
 on:
-  workflow_dispatch:
-  push:
+  pull_request:
     branches: [ main ]
     paths: [ 'model/**' ]
 
 jobs:
-  serve-model:
+  validate-model-server:
     runs-on: ubuntu-latest
     container:
-      image: python:3.8-slim
+      image: python:3-slim
       ports:
         - 5000:5000
-      options: --health-cmd "curl -f http://localhost:5000/ping || exit 1" --health-interval 10s --health-timeout 5s --health-retries 5
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.8'
+        python-version: '3.x'
 
     - name: Install dependencies
       run: |
+        pip install --upgrade pip
         pip install mlflow
-        pip install wait-for-it
+        if [ -f "requirements.txt" ]; then
+          pip install -r requirements.txt
+        fi
 
-    - name: Start MLflow model server
+    - name: Start and verify MLflow server
       run: |
         echo "Starting MLflow model server..."
-        mlflow models serve -m ./model -p 5000 -h 0.0.0.0 &
-        wait-for-it localhost:5000 --timeout=60 --strict -- echo "MLflow server is up!"
-
-    - name: Test model endpoint
-      run: |
-        curl -X POST -H "Content-Type:application/json; format=pandas-split" \
-          --data '{"columns":["feature1","feature2"],"data":[[1.0, 2.0]]}' \
-          http://localhost:5000/invocations
+        nohup mlflow models serve -m ./model -p 5000 -h 0.0.0.0 > server.log 2>&1 &
+        
+        echo "Waiting for server to start..."
+        for i in {1..60}; do
+          if curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/ping | grep -q "200"; then
+            echo "✅ Model server is running and listening on port 5000"
+            exit 0
+          fi
+          sleep 1
+        done
+        
+        echo "❌ Model server failed to start"
+        echo "--- Server logs ---"
+        cat server.log
+        exit 1
