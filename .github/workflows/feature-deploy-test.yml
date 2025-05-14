@@ -18,13 +18,17 @@ jobs:
     - name: Set up Python and install dependencies
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8  # Specify the version you need
+        python-version: 3.9  
 
-    - name: Install dependencies
+    - name: Install dependencies from the current branch
       run: |
-        # Install required packages including MLflow
+        # Install required packages including MLflow and others from the requirements.txt in the PR branch
+        pip install -r requirements.txt  # This installs the dependencies from the PR branch
+        
+    - name: Install MLflow
+      run: |
+        # Install MLflow if it's not included in the requirements.txt
         pip install mlflow
-        pip install -r requirements.txt  # If you have any other requirements
 
     - name: Build the Docker container
       run: |
