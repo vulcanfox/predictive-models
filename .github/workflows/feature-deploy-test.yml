@@ -1,0 +1,42 @@
+name: Serve MLflow Model in Local Container
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  serve-model:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the pull request branch
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.head_ref }}  # Checkout the branch that raised the PR
+
+    - name: Set up Python and install dependencies
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8  # Specify the version you need
+
+    - name: Install dependencies
+      run: |
+        # Install required packages including MLflow
+        pip install mlflow
+        pip install -r requirements.txt  # If you have any other requirements
+
+    - name: Build the Docker container
+      run: |
+        # Make sure the Dockerfile is properly set up to serve the MLflow model
+        docker build -t mlflow-serving-container .
+
+    - name: Run the model in a container
+      run: |
+        # Run the container in detached mode
+        docker run -d -p 5000:5000 mlflow-serving-container
+
+    - name: Test the MLflow model service
+      run: |
+        # Test the container by making a request to the model service
+        curl --fail http://localhost:5000/health || exit 1
