@@ -30,7 +30,16 @@ jobs:
         eval "$(pyenv virtualenv-init -)"
         pyenv install 3.11.12  # Install Python version
         pyenv global 3.11.12   # Set it as the global Python version
-        
+
+    - name: Install virtualenv
+      run: |
+        pip install virtualenv  # Install virtualenv
+
+    - name: Create virtual environment
+      run: |
+        python -m venv venv  # Create a virtual environment
+        source venv/bin/activate  # Activate the virtual environment
+
     - name: Install dependencies from the current branch
       run: |
         # Install required packages including MLflow and others from the requirements.txt in the PR branch
@@ -51,4 +60,3 @@ jobs:
       run: |
         # Test the container by making a request to the model service
         curl --fail http://localhost:5000/health || exit 1
-
