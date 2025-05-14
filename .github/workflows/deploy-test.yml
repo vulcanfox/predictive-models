@@ -58,5 +58,7 @@ jobs:
     
     - name: Test the MLflow model service
       run: |
-        # Test the container by making a request to the model service
+        # Wait for the MLflow model service to start
+        sleep 60  # Give it enough time to start
         curl --fail http://localhost:5000/health || exit 1
+
