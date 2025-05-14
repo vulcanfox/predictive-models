@@ -4,7 +4,7 @@
 if [ "$#" -ne 2 ]; then
   echo "Usage: $0 <MODEL_NAME> <VERSION>"
   exit 1
-fi
+ficlear
 
 # Assign arguments to environment variables
 export MODEL_NAME="$1"
