@@ -14,39 +14,43 @@ jobs:
         - 5000:5000
     
     steps:
-    - name: Checkout repository
+    - name: Checkout PR code
       uses: actions/checkout@v4
       with:
-        ref: ${{ github.event.pull_request.head.sha }}
+        ref: ${{ github.event.pull_request.head.ref }}
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x'
+        python-version: '3.11'  # Explicit version recommended for reproducibility
 
     - name: Install dependencies
       run: |
-        pip install --upgrade pip
+        python -m pip install --upgrade pip
         pip install mlflow
         if [ -f "requirements.txt" ]; then
           pip install -r requirements.txt
         fi
 
-    - name: Start and verify MLflow server
+    - name: Start MLflow server
       run: |
-        echo "Starting MLflow model server..."
-        nohup mlflow models serve -m ./model -p 5000 -h 0.0.0.0 > server.log 2>&1 &
-        
-        echo "Waiting for server to start..."
-        for i in {1..60}; do
-          if curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/ping | grep -q "200"; then
-            echo "✅ Model server is running and listening on port 5000"
-            exit 0
-          fi
+        echo "Starting MLflow model server with artifacts from ./model"
+        mlflow models serve -m ./model -p 5000 -h 0.0.0.0 > server.log 2>&1 &
+        SERVER_PID=$!
+        echo "Server process started with PID: $SERVER_PID"
+
+    - name: Verify server health
+      run: |
+        echo "Waiting for server to become healthy..."
+        timeout 60 bash -c 'until curl -s http://localhost:5000/ping | grep "OK"; do 
           sleep 1
-        done
-        
-        echo "❌ Model server failed to start"
-        echo "--- Server logs ---"
-        cat server.log
-        exit 1
+          echo -n "."
+        done' || (echo -e "\n❌ Server health check failed"; exit 1)
+        echo -e "\n✅ Server is healthy and listening on port 5000"
+
+    - name: Cleanup server process
+      if: always()
+      run: |
+        echo "Cleaning up server process..."
+        pkill -f "mlflow models serve" || true
