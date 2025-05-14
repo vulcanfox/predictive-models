@@ -1,46 +1,42 @@
-name: Serve MLflow Model in Local Container
+name: Serve MLflow Model
 
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths: [ 'model/**' ]
 
 jobs:
   serve-model:
     runs-on: ubuntu-latest
-
+    container:
+      image: python:3.8-slim
+      ports:
+        - 5000:5000
+      options: --health-cmd "curl -f http://localhost:5000/ping || exit 1" --health-interval 10s --health-timeout 5s --health-retries 5
+    
     steps:
-    - name: Checkout the pull request branch
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ github.head_ref }}  # Checkout the branch that raised the PR
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-    - name: Set up Python and install dependencies
-      uses: actions/setup-python@v2
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.9  
+        python-version: '3.8'
 
-    - name: Install dependencies from the current branch
+    - name: Install dependencies
       run: |
-        # Install required packages including MLflow and others from the requirements.txt in the PR branch
-        pip install -r requirements.txt  # This installs the dependencies from the PR branch
-        
-    - name: Install MLflow
-      run: |
-        # Install MLflow if it's not included in the requirements.txt
         pip install mlflow
+        pip install wait-for-it
 
-    - name: Build the Docker container
+    - name: Start MLflow model server
       run: |
-        # Make sure the Dockerfile is properly set up to serve the MLflow model
-        docker build -t mlflow-serving-container .
+        echo "Starting MLflow model server..."
+        mlflow models serve -m ./model -p 5000 -h 0.0.0.0 &
+        wait-for-it localhost:5000 --timeout=60 --strict -- echo "MLflow server is up!"
 
-    - name: Run the model in a container
+    - name: Test model endpoint
       run: |
-        # Run the container in detached mode
-        docker run -d -p 5000:5000 mlflow-serving-container
-
-    - name: Test the MLflow model service
-      run: |
-        # Test the container by making a request to the model service
-        curl --fail http://localhost:5000/health || exit 1
+        curl -X POST -H "Content-Type:application/json; format=pandas-split" \
+          --data '{"columns":["feature1","feature2"],"data":[[1.0, 2.0]]}' \
+          http://localhost:5000/invocations
