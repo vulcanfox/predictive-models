@@ -18,20 +18,20 @@ jobs:
     - name: Set up Python and install dependencies
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8  # Specify the version you need
+        python-version: 3.11  # Specify the version you need
 
     - name: Install dependencies from the current branch
       run: |
         # Install required packages including MLflow and others from the requirements.txt in the PR branch
         pip install -r requirements.txt  # This installs the dependencies from the PR branch
 
-    - name: Build the Docker container using MLflow's image
+    - name: Serve the MLflow model
       run: |
-        # Pull the official MLflow image from Docker Hub
-        docker pull mlflow/mlflow:latest
+        # Set the model directory path
+        MODEL_PATH="./model"  # Adjust if your model path differs
         
-        # Run the container in detached mode using MLflow's pre-built image
-        docker run -d -p 5000:5000 -v ${{ github.workspace }}/model:/mnt/models mlflow/mlflow:latest models serve -m /mnt/models -p 5000
+        # Serve the model using MLflow's `models serve` command
+        mlflow models serve -m $MODEL_PATH -p 5000 &
 
     - name: Test the MLflow model service
       run: |
