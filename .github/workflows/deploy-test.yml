@@ -33,4 +33,4 @@ jobs:
     - name: Serve Mlflow model for testing
       run: |
          MODEL_PATH="./model" # path of the model
-         mlflow models serve -m $MODEL_PATH -p 5000
+         mlflow models serve -m $MODEL_PATH -p 5000 --env-manager=local
