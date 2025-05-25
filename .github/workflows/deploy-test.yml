@@ -25,7 +25,12 @@ jobs:
       run: |
         python -m venv mlflow_venv  # Create a virtual environment
         source mlflow_venv/bin/activate  # Activate the virtual environment
+        
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+    - name: Serve Mlflow model for testing
+      run: |
+         MODEL_PATH="./model" # path of the model
+         mlflow models serve -m $MODEL_PATH -p 5000
