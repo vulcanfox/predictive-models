@@ -53,12 +53,15 @@ jobs:
         # Serve the model using MLflow's `models serve` command
         mlflow models serve -m $MODEL_PATH -p 5000 &
     
-        # Wait for the service to start (you can increase the time as needed)
-        sleep 10
-    
     - name: Test the MLflow model service
       run: |
-        # Wait for the MLflow model service to start
-        sleep 60  # Give it enough time to start
-        curl --fail http://localhost:5000/health || exit 1
+        # Wait for the service to be ready
+          for i in {1..10}; do
+              if curl --fail http://localhost:5000/health; then
+                  echo "Service is ready"
+                  break
+              fi
+              echo "Waiting for service to start..."
+              sleep 2
+          done
 
