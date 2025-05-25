@@ -38,3 +38,40 @@ jobs:
          sleep 15
          # Ping the endpoint 
          curl http://localhost:5000/invocations
+    - name: Test using dummy data
+      run: |
+        curl -X POST http://localhost:5006/invocations \
+          -H "Content-Type: application/json" \
+          --data '{
+            "instances": [
+              {
+                "unit_number": 1,
+                "time_in_cycles": 100,
+                "op_setting_1": 0.1,
+                "op_setting_2": 0.2,
+                "op_setting_3": 0.3,
+                "sensor_measurement_1": 0.0,
+                "sensor_measurement_2": 0.8,
+                "sensor_measurement_3": 0.0,
+                "sensor_measurement_4": 0.0,
+                "sensor_measurement_5": 0.0,
+                "sensor_measurement_6": 0.0,
+                "sensor_measurement_7": 0.0,
+                "sensor_measurement_8": 0.0,
+                "sensor_measurement_9": 0.0,
+                "sensor_measurement_10": 0.0,
+                "sensor_measurement_11": 0.0,
+                "sensor_measurement_12": 0.0,
+                "sensor_measurement_13": 0.6,
+                "sensor_measurement_14": 0.0,
+                "sensor_measurement_15": 0.0,
+                "sensor_measurement_16": 0.3,
+                "sensor_measurement_17": 0.0,
+                "sensor_measurement_18": 0.0,
+                "sensor_measurement_19": 0.0,
+                "sensor_measurement_20": 0.0,
+                "sensor_measurement_21": 0.0
+              }
+            ]
+          }'
+
