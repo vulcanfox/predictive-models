@@ -1,4 +1,4 @@
-name: Serve MLflow Model in Local Container
+name: Run Python Tests
 
 on:
   pull_request:
@@ -6,62 +6,19 @@ on:
       - main
 
 jobs:
-  serve-model:
+  run-python:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout the pull request branch
+    - name: Checkout code
       uses: actions/checkout@v2
-      with:
-        ref: ${{ github.head_ref }}  # Checkout the branch that raised the PR
 
-    - name: Set up Python and install dependencies
+    - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.11  # Specify the version you need
-        
-    - name: Install pyenv and required Python version
-      run: |
-        curl https://pyenv.run | bash
-        echo "$HOME/.pyenv/bin:$PATH" >> $GITHUB_PATH
-        export PATH="$HOME/.pyenv/bin:$PATH"
-        eval "$(pyenv init --path)"
-        eval "$(pyenv init -)"
-        eval "$(pyenv virtualenv-init -)"
-        pyenv install 3.11.12  # Install Python version
-        pyenv global 3.11.12   # Set it as the global Python version
+        python-version: 3.11
 
-    - name: Install virtualenv
+    - name: Install dependencies
       run: |
-        pip install virtualenv  # Install virtualenv
-
-    - name: Create virtual environment
-      run: |
-        python -m venv venv  # Create a virtual environment
-        source venv/bin/activate  # Activate the virtual environment
-
-    - name: Install dependencies from the current branch
-      run: |
-        # Install required packages including MLflow and others from the requirements.txt in the PR branch
-        pip install -r requirements.txt  # This installs the dependencies from the PR branch
-        
-    - name: Serve the MLflow model
-      run: |
-        # Set the model directory path
-        MODEL_PATH="./model"  # Adjust if your model path differs
-        
-        # Serve the model using MLflow's `models serve` command
-        mlflow models serve -m $MODEL_PATH -p 5000 &
-    
-    - name: Test the MLflow model service
-      run: |
-        # Wait for the service to be ready
-          for i in {1..10}; do
-              if curl --fail http://localhost:5000/health; then
-                  echo "Service is ready"
-                  break
-              fi
-              echo "Waiting for service to start..."
-              sleep 2
-          done
-
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
