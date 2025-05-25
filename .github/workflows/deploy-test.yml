@@ -16,7 +16,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.11
+        python-version: 3.12.6
     - name: Install virtualenv
       run: |
         pip install virtualenv  # Install virtualenv
@@ -36,11 +36,9 @@ jobs:
          mlflow models serve -m $MODEL_PATH -p 5000 --env-manager=local &
          # Wait a bit for the server to start
          sleep 15
-         # Ping the endpoint 
-         curl http://localhost:5000/invocations
     - name: Test using dummy data
       run: |
-        curl -X POST http://localhost:5006/invocations \
+        curl -X POST http://localhost:5000/invocations \
           -H "Content-Type: application/json" \
           --data '{
             "instances": [
