@@ -14,5 +14,5 @@ export VERSION="$2"
 echo "MODEL_NAME: $MODEL_NAME"
 echo "VERSION: $VERSION"
 
-# Run your Python script
+# Run Python script - downloads model
 python "$(dirname "$0")/download_model.py"

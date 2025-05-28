@@ -12,9 +12,9 @@ version = os.getenv("VERSION")
 if not model_name:
     print(model_name)
     print(version)
-    raise ValueError("MODEL_NAME environment variable is not set")
+    raise ValueError("MODEL_NAME environment variable is not set.")
 
-# Point to your tracking server
+# Specify MLflow tracking server
 mlflow.set_tracking_uri("http://localhost:8080")
 
 try:
